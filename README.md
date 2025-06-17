@@ -84,9 +84,6 @@ You'll need accounts and API keys from these services:
    - Competitor analysis
    - Action plan
 
-6. **Download Report**
-   - Click "Download Full Report" for JSON data
-
 ## What You Get
 
 ### Summary Metrics
