@@ -4,22 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SEO Keyword Research Tool</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .progress-bar {
-            transition: width 0.5s ease-in-out;
-        }
-        .loading-spinner {
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-    </style>
+    <link rel="stylesheet" href="/dist/output.css">
 </head>
 <body class="bg-gray-50 min-h-screen">
     <!-- Header -->
@@ -91,7 +76,7 @@
                 </div>
 
                 <!-- Start Button -->
-                <button onclick="startAnalysis()" 
+                <button id="start-analysis-btn" 
                         class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-4 px-6 rounded-lg hover:from-blue-700 hover:to-purple-700 transition duration-200 transform hover:scale-105">
                     🔍 Start Keyword Analysis
                 </button>

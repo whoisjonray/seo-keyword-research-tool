@@ -1174,3 +1174,10 @@ function downloadReport() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 }
+// Add event listener for start button
+document.addEventListener('DOMContentLoaded', function() {
+    const startBtn = document.getElementById('start-analysis-btn');
+    if (startBtn) {
+        startBtn.addEventListener('click', startAnalysis);
+    }
+});

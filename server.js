@@ -9,18 +9,9 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Security middleware
+// Security middleware - more permissive for development
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.tailwindcss.com", "https://cdn.jsdelivr.net"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://api.firecrawl.dev", "https://api.perplexity.ai", "https://api.dataforseo.com"]
-    }
-  }
+  contentSecurityPolicy: false // Disable CSP for now to avoid issues
 }));
 
 // Rate limiting
@@ -33,6 +24,9 @@ app.use(limiter);
 app.use(cors());
 app.use(compression());
 app.use(express.json());
+
+// Serve static files
+app.use('/dist', express.static('dist'));
 app.use(express.static('.'));
 
 // API endpoints for saving reports
