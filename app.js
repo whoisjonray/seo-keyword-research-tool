@@ -267,7 +267,7 @@ Return ONLY a JSON array of keyword strings, no explanations:`;
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: 'llama-3.1-sonar-small-128k-online',
+            model: 'sonar',
             messages: [
                 { role: 'system', content: `You are an expert SEO strategist specializing in ${businessType} businesses.` },
                 { role: 'user', content: prompt }
@@ -504,7 +504,7 @@ Return ONLY the domain names (like example.com) as a JSON array, no explanations
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: 'llama-3.1-sonar-small-128k-online',
+                    model: 'sonar',
                     messages: [
                         { role: 'system', content: `You are a competitive intelligence researcher specializing in ${businessType} markets.` },
                         { role: 'user', content: prompt }
