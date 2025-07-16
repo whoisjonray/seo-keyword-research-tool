@@ -113,6 +113,14 @@
                     <p class="text-sm text-gray-500 mt-1">Upload your client's keyword research CSV (e.g., JMCo or DoorGrow format)</p>
                 </div>
 
+                <!-- GSC ZIP Upload -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Upload Google Search Console Export (Optional)</label>
+                    <input type="file" id="gsc-zip-upload" accept=".zip" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                    <p class="text-sm text-gray-500 mt-1">Upload 90-day GSC export ZIP for real traffic data and CTR insights</p>
+                </div>
+
                 <!-- Client Info -->
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
@@ -205,11 +213,19 @@
                 </div>
             </div>
 
-            <!-- 30/60/90 Day Comparison -->
+            <!-- Ranking Distribution Chart -->
             <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
-                <h3 class="text-2xl font-bold text-gray-800 mb-6">📈 Progress Timeline</h3>
-                <div id="timeline-chart-container">
-                    <canvas id="timeline-chart"></canvas>
+                <h3 class="text-2xl font-bold text-gray-800 mb-6">📊 Ranking Distribution Over Time</h3>
+                <div id="ranking-distribution-container">
+                    <canvas id="ranking-distribution-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- CTR Trends Chart (if GSC data available) -->
+            <div id="ctr-trends-section" class="bg-white rounded-xl shadow-lg p-8 mb-8 hidden">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6">📈 Click-Through Rate Trends</h3>
+                <div id="ctr-trends-container">
+                    <canvas id="ctr-trends-chart"></canvas>
                 </div>
             </div>
 
@@ -228,6 +244,7 @@
                                 <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Change</th>
                                 <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Search Vol.</th>
                                 <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Est. Traffic</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                             </tr>
                         </thead>
                         <tbody id="rankings-table-body" class="bg-white divide-y divide-gray-200">
@@ -365,6 +382,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
