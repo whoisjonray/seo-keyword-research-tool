@@ -651,9 +651,7 @@ async function getHistoricalRankOverview(domain, username, password, marketType 
     const requestBody = [{
         target: cleanDomain,
         location_code: 2840, // United States
-        language_code: "en",
-        date_from: ninetyDaysAgo.toISOString().split('T')[0],
-        date_to: new Date().toISOString().split('T')[0]
+        language_code: "en"
     }];
     
     console.log('Historical API request:', requestBody);
