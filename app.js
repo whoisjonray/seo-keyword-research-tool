@@ -236,7 +236,7 @@ async function generateProgressReport() {
             marketType
         );
         
-        updateProgress(2, 'Analyzing keyword performance...');
+        updateProgress(2, 'Processing keywords from CSV...', 20);
         
         // Get current rankings for tracked keywords
         const allKeywords = [];
@@ -265,6 +265,8 @@ async function generateProgressReport() {
         
         console.log('Keywords to check rankings for:', keywords);
         
+        updateProgress(3, `Checking rankings for ${keywords.length} keywords...`, 30);
+        
         const currentRankings = await getCurrentRankings(
             keywords,
             clientDomain,
@@ -273,7 +275,7 @@ async function generateProgressReport() {
             marketType
         );
         
-        updateProgress(3, 'Calculating progress metrics...');
+        updateProgress(4, 'Calculating progress metrics...', 80);
         
         // Calculate progress metrics
         const progressData = calculateProgressMetrics(
@@ -283,10 +285,12 @@ async function generateProgressReport() {
             campaignStart
         );
         
-        updateProgress(4, 'Generating visual report...');
+        updateProgress(5, 'Generating visual report...', 90);
         
         // Display results
         showProgressResults(progressData, clientName, clientDomain);
+        
+        updateProgress(6, 'Report complete!', 100);
         
     } catch (error) {
         console.error('Progress report failed:', error);
@@ -698,7 +702,13 @@ async function getCurrentRankings(keywords, domain, username, password, marketTy
     
     // Process batches sequentially to avoid rate limits
     const allSerpResults = [];
-    for (const batch of batches) {
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        const batch = batches[batchIndex];
+        
+        // Update progress for each batch
+        const batchProgress = 30 + (batchIndex / batches.length) * 40; // 30% to 70%
+        updateProgress(3, `Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} keywords)...`, batchProgress);
+        
         const batchPromises = batch.map(keyword => 
         fetch('https://api.dataforseo.com/v3/serp/google/organic/live/advanced', {
             method: 'POST',
@@ -720,7 +730,7 @@ async function getCurrentRankings(keywords, domain, username, password, marketTy
         allSerpResults.push(...batchResults);
         
         // Small delay between batches to avoid rate limits
-        if (batches.indexOf(batch) < batches.length - 1) {
+        if (batchIndex < batches.length - 1) {
             await new Promise(resolve => setTimeout(resolve, 100));
         }
     }
@@ -1984,9 +1994,11 @@ function generateReport(url, businessType, clusters) {
 }
 
 // UI Helper functions
-function updateProgress(step, message) {
+function updateProgress(step, message, percentage = null) {
     currentStep = step;
-    const progress = (step / 6) * 100;
+    
+    // Use custom percentage if provided, otherwise calculate from step
+    const progress = percentage !== null ? percentage : (step / 6) * 100;
     
     document.getElementById('progress-bar').style.width = `${progress}%`;
     document.getElementById('progress-text').textContent = message;
@@ -1994,9 +2006,14 @@ function updateProgress(step, message) {
     // Update step indicators
     for (let i = 1; i <= 6; i++) {
         const stepElement = document.getElementById(`step-${i}`);
-        if (i <= step) {
-            stepElement.classList.remove('opacity-50');
-            stepElement.innerHTML = stepElement.innerHTML.replace('⏳', '✅');
+        if (stepElement) {
+            if (i <= step) {
+                stepElement.classList.remove('opacity-50');
+                stepElement.innerHTML = stepElement.innerHTML.replace('⏳', '✅');
+            } else {
+                stepElement.classList.add('opacity-50');
+                stepElement.innerHTML = stepElement.innerHTML.replace('✅', '⏳');
+            }
         }
     }
 }
