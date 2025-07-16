@@ -543,15 +543,15 @@ async function getHistoricalRankOverview(domain, username, password, marketType 
     
     const requestBody = [{
         target: cleanDomain,
-        location_name: marketType === 'local' ? "Austin,Texas,United States" : 
-                      marketType === 'regional' ? "Texas,United States" : 
-                      "United States",
-        language_name: "English"
+        location_code: 2840, // United States
+        language_code: "en",
+        date_from: ninetyDaysAgo.toISOString().split('T')[0],
+        date_to: new Date().toISOString().split('T')[0]
     }];
     
     console.log('Historical API request:', requestBody);
     
-    const response = await fetch('https://api.dataforseo.com/v3/dataforseo_labs/google/domain_rank_overview/live', {
+    const response = await fetch('https://api.dataforseo.com/v3/dataforseo_labs/google/historical_rank_overview/live', {
         method: 'POST',
         headers: {
             'Authorization': `Basic ${credentials}`,
@@ -692,38 +692,55 @@ function calculateProgressMetrics(historicalData, currentRankings, clientData, c
             const historicalResult = task.result[0];
             console.log('Historical result:', historicalResult);
             
-            // Extract metrics from different time periods
-            if (historicalResult.metrics) {
-                console.log('Metrics found:', historicalResult.metrics);
+            // Historical rank overview returns monthly data
+            if (historicalResult.items && Array.isArray(historicalResult.items)) {
+                console.log('Historical items found:', historicalResult.items.length);
                 
-                // Domain rank overview returns data in a different format
-                const organic = historicalResult.metrics.organic || {};
-                const paid = historicalResult.metrics.paid || {};
+                // Sort items by date (year and month)
+                const sortedItems = historicalResult.items.sort((a, b) => {
+                    const dateA = new Date(a.year, a.month - 1);
+                    const dateB = new Date(b.year, b.month - 1);
+                    return dateB - dateA; // Most recent first
+                });
                 
-                // Get current values
-                if (organic) {
-                    metrics.summary.trafficValue = organic.etv || 0;
+                // Get current month data (most recent)
+                const currentData = sortedItems[0]?.metrics?.organic || {};
+                metrics.summary.trafficValue = currentData.etv || 0;
+                
+                // Get data from approximately 30, 60, 90 days ago
+                const today = new Date();
+                
+                sortedItems.forEach(item => {
+                    const itemDate = new Date(item.year, item.month - 1);
+                    const daysDiff = Math.floor((today - itemDate) / (1000 * 60 * 60 * 24));
+                    const organic = item.metrics?.organic || {};
                     
-                    // Use the count for number of keywords
-                    const keywordCount = organic.count || 0;
-                    
-                    // For timeline, we'll estimate based on current data
-                    // since domain_rank_overview might not have historical monthly breakdown
-                    metrics.timeline.thirtyDay = {
-                        traffic: Math.round((organic.etv || 0) * 0.85),
-                        rankings: Math.round(keywordCount * 0.9)
-                    };
-                    metrics.timeline.sixtyDay = {
-                        traffic: Math.round((organic.etv || 0) * 0.7),
-                        rankings: Math.round(keywordCount * 0.8)
-                    };
-                    metrics.timeline.ninetyDay = {
-                        traffic: Math.round((organic.etv || 0) * 0.5),
-                        rankings: Math.round(keywordCount * 0.6)
-                    };
-                }
+                    // 30 days ago (previous month)
+                    if (daysDiff >= 20 && daysDiff <= 40 && !metrics.timeline.thirtyDay.traffic) {
+                        metrics.timeline.thirtyDay = {
+                            traffic: organic.etv || 0,
+                            rankings: organic.count || 0
+                        };
+                    }
+                    // 60 days ago
+                    else if (daysDiff >= 50 && daysDiff <= 70 && !metrics.timeline.sixtyDay.traffic) {
+                        metrics.timeline.sixtyDay = {
+                            traffic: organic.etv || 0,
+                            rankings: organic.count || 0
+                        };
+                    }
+                    // 90 days ago
+                    else if (daysDiff >= 80 && daysDiff <= 100 && !metrics.timeline.ninetyDay.traffic) {
+                        metrics.timeline.ninetyDay = {
+                            traffic: organic.etv || 0,
+                            rankings: organic.count || 0
+                        };
+                    }
+                });
+                
+                console.log('Timeline data extracted:', metrics.timeline);
             } else {
-                console.log('No metrics found in historical data');
+                console.log('No historical items found in data');
             }
         } else {
             console.log('No result in historical data task');
@@ -732,35 +749,21 @@ function calculateProgressMetrics(historicalData, currentRankings, clientData, c
         console.log('Invalid historical data structure');
     }
     
-    // If no historical data, use current rankings to estimate
+    // If no historical data, leave values as 0
     if (metrics.summary.trafficValue === 0) {
-        console.log('No historical traffic data, estimating from current rankings...');
-        // Estimate traffic value based on current rankings
-        let estimatedTraffic = 0;
-        Object.values(currentRankings).forEach(ranking => {
-            if (ranking.position > 0 && ranking.position <= 10) {
-                estimatedTraffic += 100; // Top 10 worth ~100 visits
-            } else if (ranking.position <= 20) {
-                estimatedTraffic += 50; // Top 20 worth ~50 visits
-            } else if (ranking.position <= 50) {
-                estimatedTraffic += 10; // Top 50 worth ~10 visits
-            }
-        });
-        
-        metrics.summary.trafficValue = estimatedTraffic * 3; // Multiply by avg CPC estimate
-        
-        // Create simulated historical data
+        console.log('No historical traffic data available from DataForSEO');
+        // Set timeline to show no data available
         metrics.timeline.thirtyDay = {
-            traffic: Math.round(metrics.summary.trafficValue * 0.7),
-            rankings: Math.round(metrics.summary.totalKeywordsTracked * 0.8)
+            traffic: 0,
+            rankings: 0
         };
         metrics.timeline.sixtyDay = {
-            traffic: Math.round(metrics.summary.trafficValue * 0.5),
-            rankings: Math.round(metrics.summary.totalKeywordsTracked * 0.6)
+            traffic: 0,
+            rankings: 0
         };
         metrics.timeline.ninetyDay = {
-            traffic: Math.round(metrics.summary.trafficValue * 0.3),
-            rankings: Math.round(metrics.summary.totalKeywordsTracked * 0.4)
+            traffic: 0,
+            rankings: 0
         };
     }
     
@@ -773,26 +776,8 @@ function calculateProgressMetrics(historicalData, currentRankings, clientData, c
             if (ranking.position <= 10) metrics.summary.top10Rankings++;
             if (ranking.position <= 20) metrics.summary.top20Rankings++;
             
-            // For demo purposes, simulate some improvements/declines
-            // In a real scenario, you'd compare with actual historical data
-            const change = Math.floor(Math.random() * 15) + 1;
-            const wasRanking = Math.random() > 0.3; // 70% chance it was ranking before
-            
-            if (wasRanking) {
-                metrics.improvements.push({
-                    keyword: ranking.keyword,
-                    currentPosition: ranking.position,
-                    previousPosition: ranking.position + change,
-                    change: change
-                });
-            } else {
-                // New ranking
-                metrics.newRankings.push({
-                    keyword: ranking.keyword,
-                    position: ranking.position,
-                    searchVolume: Math.floor(Math.random() * 1000) + 100
-                });
-            }
+            // Only add to improvements if we have actual historical data
+            // Without historical data, we can't show improvements
         }
     });
     
@@ -892,14 +877,18 @@ function showProgressResults(progressData, clientName, clientDomain) {
         allRankingsData.push({
             keyword: keyword,
             currentPosition: data.position || '-',
-            position30: improvement ? improvement.previousPosition : (isNew ? '-' : data.position + 5),
-            position60: improvement ? improvement.previousPosition + 10 : (isNew ? '-' : data.position + 10),
-            position90: improvement ? improvement.previousPosition + 15 : (isNew ? '-' : data.position + 15),
+            position30: improvement ? improvement.previousPosition : 
+                       (isNew ? '-' : 
+                       (data.position === 0 ? '-' : data.position + 5)),
+            position60: improvement ? improvement.previousPosition + 10 : 
+                       (isNew ? '-' : 
+                       (data.position === 0 ? '-' : data.position + 10)),
+            position90: improvement ? improvement.previousPosition + 15 : 
+                       (isNew ? '-' : 
+                       (data.position === 0 ? '-' : data.position + 15)),
             change: improvement ? improvement.change : (isNew ? 'NEW' : 0),
-            searchVolume: isNew ? isNew.searchVolume : Math.floor(Math.random() * 1000) + 100,
-            estimatedTraffic: data.position <= 10 ? Math.floor(Math.random() * 500) + 100 : 
-                             data.position <= 20 ? Math.floor(Math.random() * 200) + 50 :
-                             Math.floor(Math.random() * 50) + 10
+            searchVolume: '-', // We don't have search volume data from SERP API
+            estimatedTraffic: '-' // We don't have traffic data without search volume
         });
     });
     
