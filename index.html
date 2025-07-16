@@ -205,11 +205,36 @@
 
         <!-- Progress Report Results -->
         <div id="progress-results" class="hidden">
-            <!-- Progress Summary -->
-            <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl shadow-lg p-8 mb-8">
-                <h2 class="text-3xl font-bold mb-4">📊 SEO Progress Report</h2>
-                <div id="progress-summary" class="grid md:grid-cols-3 gap-6">
-                    <!-- Progress summary cards will be inserted here -->
+            <!-- Executive Summary Hero -->
+            <div class="bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl shadow-lg p-8 mb-8">
+                <h2 class="text-3xl font-bold mb-2">🚀 SEO Performance Summary</h2>
+                <p class="text-lg opacity-90 mb-6">Here's how your SEO is performing and what we've accomplished</p>
+                <div id="executive-summary" class="grid md:grid-cols-4 gap-6">
+                    <!-- Executive summary cards will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Key Wins Section -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h3 class="text-2xl font-bold text-green-600 mb-6">🏆 Major Wins This Period</h3>
+                <div id="key-wins" class="space-y-4">
+                    <!-- Key wins will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Visibility Score & Trend -->
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white rounded-xl shadow-lg p-8">
+                    <h3 class="text-2xl font-bold text-blue-600 mb-4">📈 SEO Visibility Score</h3>
+                    <div id="visibility-score" class="text-center">
+                        <!-- Visibility score will be inserted here -->
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-8">
+                    <h3 class="text-2xl font-bold text-purple-600 mb-4">💰 Estimated Traffic Value</h3>
+                    <div id="traffic-impact" class="text-center">
+                        <!-- Traffic impact will be inserted here -->
+                    </div>
                 </div>
             </div>
 
@@ -229,28 +254,45 @@
                 </div>
             </div>
 
-            <!-- Comprehensive Rankings Table -->
+            <!-- Top Performing Keywords -->
             <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
-                <h3 class="text-2xl font-bold text-blue-600 mb-4">📊 All Keyword Rankings (Top 100)</h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keyword</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Current Pos.</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">30 Days Ago</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">60 Days Ago</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">90 Days Ago</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Change</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Search Vol.</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Est. Traffic</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="rankings-table-body" class="bg-white divide-y divide-gray-200">
-                            <!-- Table rows will be inserted here -->
-                        </tbody>
-                    </table>
+                <h3 class="text-2xl font-bold text-blue-600 mb-6">🎯 Priority Keywords Performance</h3>
+                <div class="mb-4 flex space-x-4">
+                    <button onclick="filterKeywords('all')" class="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium">All Keywords</button>
+                    <button onclick="filterKeywords('improved')" class="px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-medium">Improved</button>
+                    <button onclick="filterKeywords('top10')" class="px-4 py-2 bg-purple-100 text-purple-800 rounded-lg text-sm font-medium">Top 10</button>
+                    <button onclick="filterKeywords('opportunities')" class="px-4 py-2 bg-orange-100 text-orange-800 rounded-lg text-sm font-medium">Opportunities</button>
+                </div>
+                <div id="priority-keywords" class="space-y-3">
+                    <!-- Priority keywords will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Detailed Rankings Table (Collapsible) -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-600">📋 Complete Keyword Rankings</h3>
+                    <button onclick="toggleDetailedTable()" id="toggle-detailed" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">
+                        Show Details
+                    </button>
+                </div>
+                <div id="detailed-rankings" class="hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keyword</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Current</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Previous</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Change</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rankings-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Table rows will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 

@@ -992,27 +992,286 @@ function generateActionRecommendation(keyword, currentPos, change, searchVol) {
     return "🔍 Research competitor strategy";
 }
 
+// Calculate visibility score (weighted by position and search volume)
+function calculateVisibilityScore(rankings) {
+    let totalScore = 0;
+    let totalKeywords = 0;
+    
+    Object.values(rankings).forEach(data => {
+        if (data.position > 0 && data.position <= 100) {
+            // Higher score for better positions (position 1 = 100 points, position 100 = 1 point)
+            const positionScore = Math.max(0, 101 - data.position);
+            totalScore += positionScore;
+            totalKeywords++;
+        }
+    });
+    
+    return totalKeywords > 0 ? Math.round(totalScore / totalKeywords) : 0;
+}
+
+// Generate executive summary with key wins
+function generateExecutiveSummary(progressData, gscData) {
+    const currentRankings = Object.keys(progressData.currentRankings || {}).length;
+    const improvements = progressData.improvements?.length || 0;
+    const newRankings = progressData.newRankings?.length || 0;
+    const visibilityScore = calculateVisibilityScore(progressData.currentRankings || {});
+    
+    // Calculate GSC improvements if available
+    let clicksGrowth = 0;
+    let impressionsGrowth = 0;
+    if (gscData?.dates?.data && gscData.dates.data.length >= 30) {
+        const recent = gscData.dates.data.slice(-7);
+        const previous = gscData.dates.data.slice(-37, -30);
+        
+        const recentClicks = recent.reduce((sum, day) => sum + (parseInt(day.Clicks) || 0), 0);
+        const previousClicks = previous.reduce((sum, day) => sum + (parseInt(day.Clicks) || 0), 0);
+        
+        clicksGrowth = previousClicks > 0 ? Math.round(((recentClicks - previousClicks) / previousClicks) * 100) : 0;
+    }
+    
+    return {
+        visibilityScore,
+        currentRankings,
+        improvements,
+        newRankings,
+        clicksGrowth,
+        topKeywords: Object.entries(progressData.currentRankings || {})
+            .filter(([_, data]) => data.position > 0 && data.position <= 10)
+            .length
+    };
+}
+
+// Generate key wins
+function generateKeyWins(progressData, gscData) {
+    const wins = [];
+    
+    // New top 10 rankings
+    const top10Keywords = Object.entries(progressData.currentRankings || {})
+        .filter(([_, data]) => data.position > 0 && data.position <= 10)
+        .slice(0, 3);
+    
+    if (top10Keywords.length > 0) {
+        wins.push({
+            title: `${top10Keywords.length} Keywords in Top 10`,
+            description: `Including "${top10Keywords[0][0]}" at position ${top10Keywords[0][1].position}`,
+            icon: "🎯",
+            color: "green"
+        });
+    }
+    
+    // Best ranking improvements
+    if (progressData.improvements?.length > 0) {
+        const bestImprovement = progressData.improvements[0];
+        wins.push({
+            title: `${progressData.improvements.length} Keywords Improved`,
+            description: `Best: "${bestImprovement.keyword}" jumped ${bestImprovement.change} positions`,
+            icon: "📈",
+            color: "blue"
+        });
+    }
+    
+    // New rankings gained
+    if (progressData.newRankings?.length > 0) {
+        wins.push({
+            title: `${progressData.newRankings.length} New Rankings`,
+            description: `Started ranking for new keywords this period`,
+            icon: "✨",
+            color: "purple"
+        });
+    }
+    
+    // GSC wins if available
+    if (gscData?.queries?.data) {
+        const topQueries = gscData.queries.data
+            .filter(q => parseInt(q.Clicks) > 0)
+            .slice(0, 1);
+        
+        if (topQueries.length > 0) {
+            wins.push({
+                title: `${topQueries[0].Clicks} Clicks This Period`,
+                description: `Top performing: "${topQueries[0]['Top queries']}"`,
+                icon: "👆",
+                color: "green"
+            });
+        }
+    }
+    
+    return wins;
+}
+
+// Generate priority keywords display
+function generatePriorityKeywords(progressData) {
+    const allKeywords = Object.entries(progressData.currentRankings || {});
+    
+    // Category keywords
+    const categories = {
+        all: allKeywords,
+        improved: allKeywords.filter(([keyword, data]) => 
+            progressData.improvements?.some(imp => imp.keyword === keyword)
+        ),
+        top10: allKeywords.filter(([_, data]) => data.position > 0 && data.position <= 10),
+        opportunities: allKeywords.filter(([_, data]) => 
+            data.position > 10 && data.position <= 30
+        )
+    };
+    
+    // Store for filtering
+    window.keywordCategories = categories;
+    window.currentProgressData = progressData;
+    
+    // Display all by default
+    displayKeywordCategory('all');
+}
+
+// Display keywords by category
+function displayKeywordCategory(category) {
+    const keywords = window.keywordCategories[category] || [];
+    
+    const html = keywords.slice(0, 20).map(([keyword, data]) => {
+        const improvement = window.currentProgressData?.improvements?.find(imp => imp.keyword === keyword);
+        const actionRecommendation = generateActionRecommendation(keyword, data.position || '-', 0, '-');
+        
+        let statusBadge = '';
+        let changeIndicator = '';
+        
+        if (data.position > 0 && data.position <= 3) {
+            statusBadge = '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Top 3</span>';
+        } else if (data.position > 0 && data.position <= 10) {
+            statusBadge = '<span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">Top 10</span>';
+        } else if (data.position > 10 && data.position <= 20) {
+            statusBadge = '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Top 20</span>';
+        }
+        
+        if (improvement) {
+            changeIndicator = `<span class="text-green-600 text-sm">↑ ${improvement.change}</span>`;
+        }
+        
+        return `
+            <div class="flex justify-between items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="font-medium text-gray-900">${keyword}</span>
+                        ${statusBadge}
+                        ${changeIndicator}
+                    </div>
+                    <div class="text-sm text-gray-600">${actionRecommendation}</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-2xl font-bold ${data.position <= 10 ? 'text-green-600' : 'text-gray-500'}">
+                        ${data.position || '-'}
+                    </div>
+                    <div class="text-xs text-gray-500">Position</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    document.getElementById('priority-keywords').innerHTML = html || 
+        '<div class="text-center text-gray-500 py-8">No keywords found in this category</div>';
+}
+
+// Filter keywords function (called by buttons)
+function filterKeywords(category) {
+    displayKeywordCategory(category);
+    
+    // Update button states
+    document.querySelectorAll('#priority-keywords').forEach(btn => {
+        btn.classList.remove('bg-blue-500', 'text-white');
+        btn.classList.add('bg-blue-100', 'text-blue-800');
+    });
+}
+
+// Toggle detailed table
+function toggleDetailedTable() {
+    const detailedTable = document.getElementById('detailed-rankings');
+    const toggleBtn = document.getElementById('toggle-detailed');
+    
+    if (detailedTable.classList.contains('hidden')) {
+        detailedTable.classList.remove('hidden');
+        toggleBtn.textContent = 'Hide Details';
+    } else {
+        detailedTable.classList.add('hidden');
+        toggleBtn.textContent = 'Show Details';
+    }
+}
+
 // Display progress results
 function showProgressResults(progressData, clientName, clientDomain) {
     document.getElementById('progress-section').classList.add('hidden');
     document.getElementById('progress-results').classList.remove('hidden');
     
-    // Summary cards
+    // Generate executive summary
+    const execSummary = generateExecutiveSummary(progressData, gscData);
+    
+    // Executive summary cards
     const summaryHtml = `
         <div class="bg-white/20 backdrop-blur p-6 rounded-lg text-center">
-            <div class="text-4xl font-bold">${progressData.summary.keywordsRanking}</div>
-            <div class="text-sm opacity-90 mt-1">Keywords Ranking</div>
+            <div class="text-4xl font-bold">${execSummary.visibilityScore}</div>
+            <div class="text-sm opacity-90 mt-1">Visibility Score</div>
+            <div class="text-xs opacity-75 mt-1">out of 100</div>
         </div>
         <div class="bg-white/20 backdrop-blur p-6 rounded-lg text-center">
-            <div class="text-4xl font-bold">${progressData.summary.top10Rankings}</div>
+            <div class="text-4xl font-bold">${execSummary.topKeywords}</div>
             <div class="text-sm opacity-90 mt-1">Top 10 Rankings</div>
+            <div class="text-xs opacity-75 mt-1">${execSummary.improvements} improved</div>
         </div>
         <div class="bg-white/20 backdrop-blur p-6 rounded-lg text-center">
-            <div class="text-4xl font-bold">$${Math.round(progressData.summary.trafficValue).toLocaleString()}</div>
-            <div class="text-sm opacity-90 mt-1">Est. Traffic Value</div>
+            <div class="text-4xl font-bold">${execSummary.newRankings}</div>
+            <div class="text-sm opacity-90 mt-1">New Rankings</div>
+            <div class="text-xs opacity-75 mt-1">this period</div>
+        </div>
+        <div class="bg-white/20 backdrop-blur p-6 rounded-lg text-center">
+            <div class="text-4xl font-bold">${execSummary.clicksGrowth > 0 ? '+' : ''}${execSummary.clicksGrowth}%</div>
+            <div class="text-sm opacity-90 mt-1">Click Growth</div>
+            <div class="text-xs opacity-75 mt-1">vs last month</div>
         </div>
     `;
-    document.getElementById('progress-summary').innerHTML = summaryHtml;
+    document.getElementById('executive-summary').innerHTML = summaryHtml;
+    
+    // Key wins section
+    const keyWins = generateKeyWins(progressData, gscData);
+    const winsHtml = keyWins.map(win => `
+        <div class="flex items-center p-4 bg-${win.color}-50 border border-${win.color}-200 rounded-lg">
+            <div class="text-3xl mr-4">${win.icon}</div>
+            <div>
+                <h4 class="font-bold text-${win.color}-800">${win.title}</h4>
+                <p class="text-${win.color}-700 text-sm">${win.description}</p>
+            </div>
+        </div>
+    `).join('');
+    document.getElementById('key-wins').innerHTML = winsHtml;
+    
+    // Visibility score display
+    const visibilityHtml = `
+        <div class="relative">
+            <div class="w-32 h-32 mx-auto mb-4">
+                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" stroke="#e5e7eb" stroke-width="8" fill="none"/>
+                    <circle cx="50" cy="50" r="40" stroke="#3b82f6" stroke-width="8" fill="none"
+                            stroke-dasharray="${execSummary.visibilityScore * 2.51}, 251"
+                            stroke-linecap="round"/>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-3xl font-bold text-blue-600">${execSummary.visibilityScore}</span>
+                </div>
+            </div>
+            <p class="text-gray-600 text-center">Higher scores indicate better overall ranking positions</p>
+        </div>
+    `;
+    document.getElementById('visibility-score').innerHTML = visibilityHtml;
+    
+    // Traffic impact display  
+    const trafficHtml = `
+        <div class="text-6xl font-bold text-purple-600 mb-2">$${Math.round(progressData.summary.trafficValue || 0).toLocaleString()}</div>
+        <p class="text-gray-600 mb-4">Estimated monthly traffic value</p>
+        <div class="text-sm text-gray-500">
+            <div>Based on current rankings and estimated search volumes</div>
+        </div>
+    `;
+    document.getElementById('traffic-impact').innerHTML = trafficHtml;
+    
+    // Priority keywords section (top performers, improvements, opportunities)
+    generatePriorityKeywords(progressData);
     
     // Ranking Distribution Chart
     const distributionData = calculateRankingDistribution(progressData);
@@ -1190,17 +1449,17 @@ function showProgressResults(progressData, clientName, clientDomain) {
                             item.change > 0 ? `↑ ${item.change}` :
                             item.change < 0 ? `↓ ${Math.abs(item.change)}` : '—';
         
+        const previousPos = item.position30 !== '-' ? item.position30 : 
+                           item.position60 !== '-' ? item.position60 :
+                           item.position90 !== '-' ? item.position90 : '-';
+
         return `
             <tr>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.keyword}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-center ${item.currentPosition <= 10 ? 'font-bold text-green-600' : 'text-gray-500'}">${item.currentPosition}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">${item.position30}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">${item.position60}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">${item.position90}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">${previousPos}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-bold ${changeClass}">${changeSymbol}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">${item.searchVolume}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">${item.estimatedTraffic}</td>
-                <td class="px-6 py-4 text-sm text-gray-700 max-w-xs">${item.action}</td>
+                <td class="px-6 py-4 text-sm text-gray-700">${item.action}</td>
             </tr>
         `;
     }).join('');
