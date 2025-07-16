@@ -15,3 +15,38 @@
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
+
+/* Mode selection buttons */
+.mode-btn {
+    transition: all 0.3s ease;
+}
+
+.mode-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Progress report styling */
+#progress-results .gradient-bg {
+    background: linear-gradient(135deg, #9333ea 0%, #db2777 100%);
+}
+
+/* Print styles for PDF export */
+@media print {
+    body {
+        background: white;
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+    
+    #progress-results {
+        page-break-inside: avoid;
+    }
+    
+    .bg-white {
+        box-shadow: none !important;
+        border: 1px solid #e5e7eb;
+    }
+}
