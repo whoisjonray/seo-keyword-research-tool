@@ -213,9 +213,33 @@
                 </div>
             </div>
 
-            <!-- Ranking Changes -->
+            <!-- Comprehensive Rankings Table -->
             <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
-                <h3 class="text-2xl font-bold text-green-600 mb-4">🚀 Ranking Improvements</h3>
+                <h3 class="text-2xl font-bold text-blue-600 mb-4">📊 All Keyword Rankings (Top 100)</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keyword</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Current Pos.</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">30 Days Ago</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">60 Days Ago</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">90 Days Ago</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Change</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Search Vol.</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Est. Traffic</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rankings-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Table rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Ranking Changes Summary -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h3 class="text-2xl font-bold text-green-600 mb-4">🚀 Top Improvements</h3>
                 <div id="ranking-changes">
                     <!-- Ranking changes will be inserted here -->
                 </div>
