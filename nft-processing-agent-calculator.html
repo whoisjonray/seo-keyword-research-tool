@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFT Processing Agent - ROI Calculator & Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            color: #a0a0a0;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        @media (max-width: 968px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h2 {
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            color: #ffffff;
+        }
+
+        .nft-tiers {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .tier-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .tier-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tier-card.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .tier-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .genesis { color: #ffd700; }
+        .prime { color: #c0c0c0; }
+        .standard { color: #cd7f32; }
+
+        .tier-price {
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+
+        .tier-details {
+            font-size: 0.9em;
+            color: #a0a0a0;
+        }
+
+        .calculator-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            color: #a0a0a0;
+            font-size: 0.9em;
+        }
+
+        .input-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .input-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .input-value {
+            font-size: 1.2em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .roi-display {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(240, 147, 251, 0.2));
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .roi-metric {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .roi-metric:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .roi-label {
+            color: #a0a0a0;
+        }
+
+        .roi-value {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .positive { color: #4ade80; }
+        .negative { color: #f87171; }
+
+        .chart-container {
+            height: 400px;
+            margin-top: 30px;
+            position: relative;
+        }
+
+        canvas {
+            border-radius: 15px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            color: #a0a0a0;
+            margin-top: 10px;
+        }
+
+        .processing-visual {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            position: relative;
+        }
+
+        .node {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        .node.genesis {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+
+        .node.prime {
+            background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+            box-shadow: 0 0 30px rgba(192, 192, 192, 0.5);
+        }
+
+        .node.standard {
+            background: linear-gradient(135deg, #cd7f32, #daa520);
+            box-shadow: 0 0 30px rgba(205, 127, 50, 0.5);
+        }
+
+        .flow-arrow {
+            position: absolute;
+            width: 60px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 50px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(240, 147, 251, 0.2));
+            border-radius: 20px;
+            margin-top: 50px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 20px 50px;
+            background: linear-gradient(135deg, #667eea, #f093fb);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.2em;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        .info-tooltip {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            color: #667eea;
+            text-align: center;
+            line-height: 16px;
+            font-size: 12px;
+            margin-left: 5px;
+            cursor: help;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 NFT Processing Agents</h1>
+            <p>Own a piece of the decentralized receipt processing network. Earn perpetual revenue from data monetization.</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">$2.3M</div>
+                <div class="stat-label">Total Raise Target</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">1,000</div>
+                <div class="stat-label">Total NFTs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">30%</div>
+                <div class="stat-label">Revenue Share Pool</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">∞</div>
+                <div class="stat-label">Revenue Duration</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="card">
+                <h2>Select Your Processing Agent Tier</h2>
+                
+                <div class="nft-tiers">
+                    <div class="tier-card" onclick="selectTier('genesis')" id="genesis-tier">
+                        <div class="tier-name genesis">⚡ Genesis</div>
+                        <div class="tier-price">5 ETH</div>
+                        <div class="tier-details">
+                            0.5% Revenue<br>
+                            100 Available<br>
+                            10K Receipts/Day
+                        </div>
+                    </div>
+                    <div class="tier-card selected" onclick="selectTier('prime')" id="prime-tier">
+                        <div class="tier-name prime">💎 Prime</div>
+                        <div class="tier-price">1 ETH</div>
+                        <div class="tier-details">
+                            0.1% Revenue<br>
+                            400 Available<br>
+                            2K Receipts/Day
+                        </div>
+                    </div>
+                    <div class="tier-card" onclick="selectTier('standard')" id="standard-tier">
+                        <div class="tier-name standard">🔧 Standard</div>
+                        <div class="tier-price">0.5 ETH</div>
+                        <div class="tier-details">
+                            0.05% Revenue<br>
+                            500 Available<br>
+                            1K Receipts/Day
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calculator-inputs">
+                    <div class="input-group">
+                        <label>ETH Price (USD)</label>
+                        <input type="range" id="eth-price" min="1000" max="5000" value="2000" oninput="updateCalculations()">
+                        <div class="input-value">$<span id="eth-price-display">2000</span></div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Monthly Platform Revenue (USD)</label>
+                        <input type="range" id="monthly-revenue" min="100000" max="10000000" value="500000" step="100000" oninput="updateCalculations()">
+                        <div class="input-value">$<span id="revenue-display">500,000</span></div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Hold Period (Years)</label>
+                        <input type="range" id="hold-period" min="1" max="5" value="2" oninput="updateCalculations()">
+                        <div class="input-value"><span id="period-display">2</span> Years</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>ROI Analysis <span class="info-tooltip" title="Based on selected tier and inputs">?</span></h2>
+                
+                <div class="roi-display">
+                    <div class="roi-metric">
+                        <span class="roi-label">Initial Investment</span>
+                        <span class="roi-value" id="initial-investment">$2,000</span>
+                    </div>
+                    <div class="roi-metric">
+                        <span class="roi-label">Monthly Revenue Share</span>
+                        <span class="roi-value positive" id="monthly-earnings">$150</span>
+                    </div>
+                    <div class="roi-metric">
+                        <span class="roi-label">Annual Revenue</span>
+                        <span class="roi-value positive" id="annual-earnings">$1,800</span>
+                    </div>
+                    <div class="roi-metric">
+                        <span class="roi-label">Total Earnings (Period)</span>
+                        <span class="roi-value positive" id="total-earnings">$3,600</span>
+                    </div>
+                    <div class="roi-metric">
+                        <span class="roi-label">ROI %</span>
+                        <span class="roi-value positive" id="roi-percentage">80%</span>
+                    </div>
+                    <div class="roi-metric">
+                        <span class="roi-label">Payback Period</span>
+                        <span class="roi-value" id="payback-period">13 months</span>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="roi-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>How Processing Agents Work</h2>
+            
+            <div class="processing-visual">
+                <div class="node genesis" style="left: 20%; top: 30%;">📱</div>
+                <div class="flow-arrow" style="left: 28%; top: 48%; transform: rotate(25deg);"></div>
+                
+                <div class="node prime" style="left: 45%; top: 50%;">🤖</div>
+                <div class="flow-arrow" style="left: 53%; top: 50%;"></div>
+                
+                <div class="node standard" style="right: 20%; top: 30%;">💰</div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 30px;">
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 10px;">1. Receipt Scanning</h3>
+                    <p style="color: #a0a0a0;">Users scan receipts through the app, generating valuable consumer data</p>
+                </div>
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 10px;">2. Agent Processing</h3>
+                    <p style="color: #a0a0a0;">Your NFT processes assigned receipts, validating and aggregating data</p>
+                </div>
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 10px;">3. Revenue Distribution</h3>
+                    <p style="color: #a0a0a0;">When data is sold, you automatically receive your revenue share</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="cta-section">
+            <h2 style="font-size: 2.5em; margin-bottom: 20px;">Ready to Own Your Processing Agent?</h2>
+            <p style="font-size: 1.2em; color: #a0a0a0; margin-bottom: 30px;">
+                Join 1,000 pioneers building the future of decentralized data processing
+            </p>
+            <a href="#" class="cta-button">Join Whitelist</a>
+            <p style="margin-top: 20px; color: #a0a0a0;">
+                Minting starts January 2025 • Whitelist gets 20% discount
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let selectedTier = 'prime';
+        let chart = null;
+
+        const tierData = {
+            genesis: { price: 5, revenueShare: 0.005, name: 'Genesis' },
+            prime: { price: 1, revenueShare: 0.001, name: 'Prime' },
+            standard: { price: 0.5, revenueShare: 0.0005, name: 'Standard' }
+        };
+
+        function selectTier(tier) {
+            // Update UI
+            document.querySelectorAll('.tier-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.getElementById(`${tier}-tier`).classList.add('selected');
+            
+            selectedTier = tier;
+            updateCalculations();
+        }
+
+        function updateCalculations() {
+            // Get input values
+            const ethPrice = parseFloat(document.getElementById('eth-price').value);
+            const monthlyRevenue = parseFloat(document.getElementById('monthly-revenue').value);
+            const holdPeriod = parseFloat(document.getElementById('hold-period').value);
+            
+            // Update displays
+            document.getElementById('eth-price-display').textContent = ethPrice.toLocaleString();
+            document.getElementById('revenue-display').textContent = monthlyRevenue.toLocaleString();
+            document.getElementById('period-display').textContent = holdPeriod;
+            
+            // Calculate ROI
+            const tier = tierData[selectedTier];
+            const investment = tier.price * ethPrice;
+            const nftHolderPool = monthlyRevenue * 0.3; // 30% to NFT holders
+            const monthlyEarnings = nftHolderPool * tier.revenueShare;
+            const annualEarnings = monthlyEarnings * 12;
+            const totalEarnings = annualEarnings * holdPeriod;
+            const roi = ((totalEarnings - investment) / investment) * 100;
+            const paybackMonths = investment / monthlyEarnings;
+            
+            // Update ROI display
+            document.getElementById('initial-investment').textContent = `$${investment.toLocaleString()}`;
+            document.getElementById('monthly-earnings').textContent = `$${Math.round(monthlyEarnings).toLocaleString()}`;
+            document.getElementById('annual-earnings').textContent = `$${Math.round(annualEarnings).toLocaleString()}`;
+            document.getElementById('total-earnings').textContent = `$${Math.round(totalEarnings).toLocaleString()}`;
+            document.getElementById('roi-percentage').textContent = `${Math.round(roi)}%`;
+            document.getElementById('roi-percentage').className = roi > 0 ? 'roi-value positive' : 'roi-value negative';
+            document.getElementById('payback-period').textContent = paybackMonths > 12 ? 
+                `${Math.round(paybackMonths / 12 * 10) / 10} years` : 
+                `${Math.round(paybackMonths)} months`;
+            
+            // Update chart
+            updateChart(investment, monthlyEarnings, holdPeriod);
+        }
+
+        function updateChart(investment, monthlyEarnings, years) {
+            const ctx = document.getElementById('roi-chart').getContext('2d');
+            
+            // Generate data points
+            const months = years * 12;
+            const labels = [];
+            const cumulativeEarnings = [];
+            const investmentLine = [];
+            
+            for (let i = 0; i <= months; i++) {
+                labels.push(i === 0 ? 'Start' : `Month ${i}`);
+                cumulativeEarnings.push(i * monthlyEarnings);
+                investmentLine.push(investment);
+            }
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Cumulative Earnings',
+                            data: cumulativeEarnings,
+                            borderColor: '#4ade80',
+                            backgroundColor: 'rgba(74, 222, 128, 0.1)',
+                            borderWidth: 2,
+                            fill: true
+                        },
+                        {
+                            label: 'Initial Investment',
+                            data: investmentLine,
+                            borderColor: '#f87171',
+                            borderWidth: 2,
+                            borderDash: [5, 5]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': $' + Math.round(context.parsed.y).toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#a0a0a0',
+                                maxTicksLimit: 10
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#a0a0a0',
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize on load
+        updateCalculations();
+    </script>
+</body>
+</html>
