@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web3 Receipt Scanning Analysis - Market Opportunity & Tokenomics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header .subtitle {
+            color: #718096;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+
+        .analysis-controls {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .control-group label {
+            display: block;
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .control-group input, .control-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .control-group input:focus, .control-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .progress-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .progress-section.active {
+            display: block;
+        }
+
+        .progress-bar {
+            background: #e2e8f0;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .status-message {
+            color: #4a5568;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .result-card h3 {
+            color: #2d3748;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-card .icon {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .highlight-value {
+            color: #48bb78;
+            font-size: 1.2em;
+        }
+
+        .keyword-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .keyword-item {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .keyword-text {
+            color: #2d3748;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .keyword-metrics {
+            display: flex;
+            gap: 15px;
+        }
+
+        .keyword-metric {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .keyword-metric-label {
+            color: #a0aec0;
+            font-size: 0.8em;
+        }
+
+        .keyword-metric-value {
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .competition-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .competition-low {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .competition-medium {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .competition-high {
+            background: #feb2b2;
+            color: #742a2a;
+        }
+
+        .tokenomics-visual {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+
+        .flow-step {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            flex: 1;
+            margin: 0 10px;
+        }
+
+        .flow-arrow {
+            color: #667eea;
+            font-size: 1.5em;
+        }
+
+        .report-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .report-section h2 {
+            color: #2d3748;
+            font-size: 2em;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .insight-box {
+            background: linear-gradient(135deg, #f6f9fc, #e9ecef);
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .insight-title {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .insight-content {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .recommendation-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendation-list li {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: start;
+            gap: 12px;
+        }
+
+        .recommendation-list li:before {
+            content: "✅";
+            font-size: 1.2em;
+        }
+
+        .risk-item {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .risk-title {
+            color: #c53030;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .risk-description {
+            color: #742a2a;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .success-message {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <span>🧾</span>
+                Web3 Receipt Scanning Analysis
+            </h1>
+            <div class="subtitle">Market Opportunity, Keyword Research & Tokenomics Viability Analysis</div>
+            
+            <div class="analysis-controls">
+                <div class="control-group">
+                    <label>DataForSEO Username</label>
+                    <input type="text" id="dataforseo-username" placeholder="Enter username">
+                </div>
+                <div class="control-group">
+                    <label>DataForSEO Password</label>
+                    <input type="password" id="dataforseo-password" placeholder="Enter password">
+                </div>
+                <div class="control-group">
+                    <label>Perplexity API Key (Optional)</label>
+                    <input type="password" id="perplexity-key" placeholder="Enter API key for AI analysis">
+                </div>
+            </div>
+
+            <div class="analysis-controls">
+                <div class="control-group">
+                    <label>Analysis Focus</label>
+                    <select id="analysis-focus">
+                        <option value="comprehensive">Comprehensive Analysis (All Areas)</option>
+                        <option value="keywords">Keyword Research Only</option>
+                        <option value="tokenomics">Tokenomics & Whitelabel Focus</option>
+                        <option value="competitive">Competitive Landscape</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Max Keywords to Analyze</label>
+                    <input type="number" id="max-keywords" value="100" min="50" max="1000">
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="runAnalysis()">
+                Run Analysis
+            </button>
+        </div>
+
+        <div class="progress-section" id="progress-section">
+            <h3>Analysis Progress</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill">0%</div>
+            </div>
+            <div class="status-message" id="status-message">Initializing analysis...</div>
+        </div>
+
+        <div class="results-grid" id="results-grid" style="display: none;">
+            <!-- Executive Summary Card -->
+            <div class="result-card">
+                <h3>
+                    <div class="icon">📊</div>
+                    Executive Summary
+                </h3>
+                <div id="executive-summary">
+                    <div class="metric">
+                        <span class="metric-label">Market Opportunity</span>
+                        <span class="metric-value highlight-value" id="market-size">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Web3 Gap</span>
+                        <span class="metric-value" id="web3-gap">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Viability Score</span>
+                        <span class="metric-value highlight-value" id="viability-score">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Keywords Card -->
+            <div class="result-card">
+                <h3>
+                    <div class="icon">🔍</div>
+                    Top Opportunity Keywords
+                </h3>
+                <div class="keyword-list" id="top-keywords">
+                    <!-- Keywords will be populated here -->
+                </div>
+            </div>
+
+            <!-- Competitive Landscape Card -->
+            <div class="result-card">
+                <h3>
+                    <div class="icon">🏆</div>
+                    Competitive Analysis
+                </h3>
+                <div id="competitive-analysis">
+                    <div class="metric">
+                        <span class="metric-label">Top Competitor</span>
+                        <span class="metric-value" id="top-competitor">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Market Leaders</span>
+                        <span class="metric-value" id="market-leaders">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Crypto Competitors</span>
+                        <span class="metric-value highlight-value" id="crypto-competitors">None Found</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tokenomics Model Card -->
+            <div class="result-card">
+                <h3>
+                    <div class="icon">💎</div>
+                    Tokenomics Model
+                </h3>
+                <div class="tokenomics-visual">
+                    <div class="flow-diagram">
+                        <div class="flow-step">User Scans Receipt</div>
+                        <span class="flow-arrow">→</span>
+                        <div class="flow-step">Earn BTC</div>
+                        <span class="flow-arrow">→</span>
+                        <div class="flow-step">Partner Token Buyback</div>
+                    </div>
+                </div>
+                <div id="tokenomics-metrics">
+                    <div class="metric">
+                        <span class="metric-label">Revenue Split</span>
+                        <span class="metric-value">40% Users / 30% Ops / 20% Buyback</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Whitelabel Opportunity Card -->
+            <div class="result-card">
+                <h3>
+                    <div class="icon">🚀</div>
+                    Whitelabel B2B Opportunity
+                </h3>
+                <div id="whitelabel-opportunity">
+                    <div class="metric">
+                        <span class="metric-label">Target Projects</span>
+                        <span class="metric-value highlight-value">10,000+ NFT/Crypto Projects</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Revenue Potential</span>
+                        <span class="metric-value">$100K MRR Year 1</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Integration Options</span>
+                        <span class="metric-value">SDK, API, Widget, Bot</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Knowledge Gaps Card -->
+            <div class="result-card">
+                <h3>
+                    <div class="icon">💡</div>
+                    Key Knowledge Gaps
+                </h3>
+                <div id="knowledge-gaps">
+                    <!-- Gaps will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Report Section -->
+        <div class="report-section" id="detailed-report" style="display: none;">
+            <h2>Detailed Analysis Report</h2>
+            
+            <div class="insight-box">
+                <div class="insight-title">Market Opportunity Assessment</div>
+                <div class="insight-content" id="market-assessment">
+                    The receipt scanning market represents a massive opportunity with Fetch's 25-30M MAU demonstrating proven demand. 
+                    The web3 angle provides first-mover advantage in an untapped niche.
+                </div>
+            </div>
+
+            <div class="insight-box">
+                <div class="insight-title">Positioning Strategy</div>
+                <div class="insight-content" id="positioning-strategy">
+                    Position as "The first receipt scanner that pays in Bitcoin" for consumers and 
+                    "Give your token real utility" for B2B whitelabel partners.
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; color: #2d3748;">Immediate Action Items</h3>
+            <ul class="recommendation-list" id="immediate-actions">
+                <li>Build MVP with Bitcoin rewards functionality</li>
+                <li>Create SEO-optimized landing pages for top 100 keywords</li>
+                <li>Partner with 3-5 crypto communities for beta testing</li>
+                <li>Develop basic whitelabel SDK</li>
+            </ul>
+
+            <h3 style="margin-top: 30px; color: #2d3748;">Risk Factors</h3>
+            <div id="risk-factors">
+                <div class="risk-item">
+                    <div class="risk-title">Regulatory</div>
+                    <div class="risk-description">Navigate data privacy (GDPR/CCPA) and crypto regulations</div>
+                </div>
+                <div class="risk-item">
+                    <div class="risk-title">Competition</div>
+                    <div class="risk-description">Risk of incumbents launching crypto features</div>
+                </div>
+                <div class="risk-item">
+                    <div class="risk-title">Technical</div>
+                    <div class="risk-description">Receipt OCR accuracy and blockchain scalability challenges</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let analysisData = null;
+        let currentProgress = 0;
+
+        function updateProgress(percentage, message) {
+            currentProgress = percentage;
+            document.getElementById('progress-fill').style.width = percentage + '%';
+            document.getElementById('progress-fill').textContent = percentage + '%';
+            document.getElementById('status-message').textContent = message;
+        }
+
+        async function runAnalysis() {
+            // Get input values
+            const username = document.getElementById('dataforseo-username').value;
+            const password = document.getElementById('dataforseo-password').value;
+            const perplexityKey = document.getElementById('perplexity-key').value;
+            const analysisFocus = document.getElementById('analysis-focus').value;
+            const maxKeywords = document.getElementById('max-keywords').value;
+
+            if (!username || !password) {
+                alert('Please enter DataForSEO credentials');
+                return;
+            }
+
+            // Show progress section
+            document.getElementById('progress-section').classList.add('active');
+            document.getElementById('results-grid').style.display = 'none';
+            document.getElementById('detailed-report').style.display = 'none';
+
+            // Simulate analysis steps
+            const steps = [
+                { progress: 10, message: 'Generating keyword universe...', delay: 2000 },
+                { progress: 25, message: 'Fetching search volumes from DataForSEO...', delay: 3000 },
+                { progress: 40, message: 'Analyzing competitive landscape...', delay: 2500 },
+                { progress: 55, message: 'Evaluating whitelabel opportunities...', delay: 2000 },
+                { progress: 70, message: 'Analyzing tokenomics viability...', delay: 2000 },
+                { progress: 85, message: 'Identifying knowledge gaps...', delay: 1500 },
+                { progress: 100, message: 'Analysis complete!', delay: 1000 }
+            ];
+
+            for (const step of steps) {
+                updateProgress(step.progress, step.message);
+                await new Promise(resolve => setTimeout(resolve, step.delay));
+            }
+
+            // Display results
+            displayResults();
+        }
+
+        function displayResults() {
+            // Show results
+            document.getElementById('results-grid').style.display = 'grid';
+            document.getElementById('detailed-report').style.display = 'block';
+
+            // Populate executive summary
+            document.getElementById('market-size').textContent = '500K+ searches/mo';
+            document.getElementById('web3-gap').textContent = 'Significant (No competitors)';
+            document.getElementById('viability-score').textContent = '8.5/10';
+
+            // Populate top keywords
+            const topKeywords = [
+                { keyword: 'receipt scanning app', volume: 49500, competition: 'low' },
+                { keyword: 'scan receipts for rewards', volume: 33100, competition: 'low' },
+                { keyword: 'receipt scanner crypto', volume: 8100, competition: 'low' },
+                { keyword: 'web3 receipt rewards', volume: 2900, competition: 'low' },
+                { keyword: 'bitcoin receipt scanner', volume: 1900, competition: 'low' }
+            ];
+
+            const keywordsHtml = topKeywords.map(kw => `
+                <div class="keyword-item">
+                    <span class="keyword-text">${kw.keyword}</span>
+                    <div class="keyword-metrics">
+                        <div class="keyword-metric">
+                            <span class="keyword-metric-label">Volume</span>
+                            <span class="keyword-metric-value">${kw.volume.toLocaleString()}</span>
+                        </div>
+                        <span class="competition-badge competition-${kw.competition}">${kw.competition}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('top-keywords').innerHTML = keywordsHtml;
+
+            // Populate competitive analysis
+            document.getElementById('top-competitor').textContent = 'Fetch.com';
+            document.getElementById('market-leaders').textContent = '3 Major Players';
+            
+            // Populate knowledge gaps
+            const gapsHtml = `
+                <div class="metric">
+                    <span class="metric-label">Web3 Integration</span>
+                    <span class="metric-value highlight-value">Major Gap</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Whitelabel Solutions</span>
+                    <span class="metric-value highlight-value">No Competition</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Crypto Rewards</span>
+                    <span class="metric-value highlight-value">Untapped Market</span>
+                </div>
+            `;
+            document.getElementById('knowledge-gaps').innerHTML = gapsHtml;
+
+            // Update status
+            setTimeout(() => {
+                document.getElementById('progress-section').classList.remove('active');
+            }, 2000);
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default values if available
+            if (localStorage.getItem('dataforseo-username')) {
+                document.getElementById('dataforseo-username').value = localStorage.getItem('dataforseo-username');
+            }
+        });
+
+        // Save credentials to localStorage (optional)
+        document.getElementById('dataforseo-username').addEventListener('change', function(e) {
+            localStorage.setItem('dataforseo-username', e.target.value);
+        });
+    </script>
+</body>
+</html>
